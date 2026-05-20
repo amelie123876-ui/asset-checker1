@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>资产配置体检 · 3年测算</title>
+<style>
+:root{
+  --blue:#1a6fc4;--blue2:#3b9de8;--teal:#00b8a9;--orange:#f47c3c;
+  --gold:#e8a800;--gray:#8c9eb0;
+  --bg:#eef5fc;--card:#fff;--border:#daeaf7;--muted:#7a90a4;--text:#1e2d3d;
+  --shadow:0 2px 14px rgba(26,111,196,.08);--r:16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  padding:12px 10px 32px;-webkit-font-smoothing:antialiased;
+}
+body.calc-open{overflow:hidden}
+.wrap{max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,#1260b0,#2f8fda);
+  border-radius:var(--r);padding:16px 17px 14px;color:#fff;
+  box-shadow:0 6px 22px rgba(26,111,196,.28);
+}
+.hero h1{font-size:18px;font-weight:900;letter-spacing:.2px}
+.hero-row{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:9px;flex-wrap:wrap}
+.hero-sums{display:flex;gap:18px}
+.hs .hs-l{font-size:10px;opacity:.8;font-weight:700}
+.hs .hs-v{font-size:22px;font-weight:900;line-height:1.1}
+.hs .hs-v .u{font-size:10px;font-weight:700;opacity:.8;margin-left:1px}
+.hs.teal .hs-v{color:#7ff5ee}
+.hero-badge{font-size:10px;opacity:.75;background:rgba(255,255,255,.14);border-radius:999px;padding:3px 9px;white-space:nowrap}
+
+/* CARD */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+.card-hd{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.cnum{width:23px;height:23px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ctitle{font-size:14px;font-weight:900}
+.csub{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+
+/* INPUT */
+.a-list{display:flex;flex-direction:column;gap:5px}
+.a-row{display:grid;grid-template-columns:1fr 70px 38px;gap:5px;align-items:center;background:#f7fbff;border:1px solid #e5f0fb;border-radius:9px;padding:5px 7px}
+.a-lbl{display:flex;align-items:center;gap:5px;min-width:0}
+.a-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.a-name{font-size:11.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-tip{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inp{
+  width:100%;border:1.5px solid var(--border);border-radius:7px;padding:5px 5px;
+  font-size:12.5px;font-weight:800;color:var(--blue);text-align:right;outline:none;background:#fff;
+  font-family:inherit;transition:border-color .15s;caret-color:transparent;
+}
+.inp:focus,.inp.active-input{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,157,232,.12)}
+.a-pct{text-align:right;font-size:10.5px;font-weight:800;color:var(--muted)}
+
+.monthly-row{display:flex;align-items:center;gap:8px;margin-top:10px;background:#f5faff;border:1.5px solid var(--border);border-radius:10px;padding:8px 11px}
+.monthly-row label{font-size:11.5px;font-weight:900;color:var(--blue);white-space:nowrap}
+.monthly-row .hint{font-size:10px;color:var(--muted);margin-left:4px}
+
+.divider{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:10.5px;font-weight:800}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ANALYSIS */
+.donuts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.donut-box{display:flex;flex-direction:column;align-items:center;background:#f7fbff;border:1px solid #e5f0fb;border-radius:12px;padding:10px 8px 8px}
+.donut-label{font-size:10.5px;font-weight:900;color:var(--muted);margin-bottom:6px;text-align:center}
+.donut-wrap{position:relative;flex-shrink:0}
+.donut-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.dc-n{font-size:15px;font-weight:900;color:var(--blue);line-height:1}
+.dc-l{font-size:9px;color:var(--muted);margin-top:1px}
+
+.diag-box{background:linear-gradient(135deg,#e8f4fd,#f0fbf9);border:1.5px solid #c8e6f8;border-radius:11px;padding:10px 12px}
+.diag-stage{font-size:10.5px;font-weight:900;color:var(--blue);margin-bottom:3px}
+.diag-text{font-size:12px;font-weight:700;color:var(--text);line-height:1.55}
+
+/* SCENARIO */
+.sc-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.sc-btn{border:1.5px solid var(--border);background:#f8fbff;border-radius:11px;padding:8px 5px;cursor:pointer;font-family:inherit;transition:all .18s;text-align:center}
+.sc-btn .sc-l{display:block;font-size:10.5px;color:var(--muted);font-weight:900}
+.sc-btn .sc-r{display:block;font-size:17px;font-weight:900;color:var(--text);margin-top:2px}
+.sc-btn .sc-h{display:block;font-size:9px;color:var(--muted);font-weight:700;margin-top:1px}
+.sc-btn.active{background:linear-gradient(135deg,var(--blue),var(--blue2));border-color:var(--blue);box-shadow:0 3px 10px rgba(26,111,196,.22);transform:translateY(-1px)}
+.sc-btn.active .sc-l,.sc-btn.active .sc-r,.sc-btn.active .sc-h{color:#fff}
+
+/* TARGET */
+.strategy-note{background:#f7fbff;border:1.5px solid var(--border);border-radius:11px;padding:9px 11px;margin-bottom:10px}
+.sn-title{font-size:11px;font-weight:900;color:var(--blue);margin-bottom:3px}
+.sn-text{font-size:11px;color:var(--muted);font-weight:700;line-height:1.5}
+
+.alloc-lr{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.alloc-panel{border-radius:12px;padding:10px 11px;border:1.5px solid var(--border)}
+.alloc-panel.cur{background:#f8fbff}
+.alloc-panel.tgt{background:linear-gradient(135deg,#e8f4fd,#f0fbf9);border-color:#c8e6f8}
+.ap-title{font-size:11px;font-weight:900;color:var(--muted);margin-bottom:7px}
+.ap-title .ap-tag{float:right;font-size:10px;background:#fff;border:1px solid var(--border);border-radius:999px;padding:1px 7px;color:var(--text);font-weight:800}
+.ap-title .ap-tag.teal{background:#e0f7f5;border-color:#a8e6e0;color:var(--teal)}
+.bar-list{display:flex;flex-direction:column;gap:5px}
+.br{display:grid;grid-template-columns:38px 1fr 34px;gap:6px;align-items:center}
+.br-name{font-size:10.5px;font-weight:900;color:var(--text)}
+.br-track{height:7px;background:#fff;border:1px solid #e2eef8;border-radius:999px;overflow:hidden}
+.br-fill{height:100%;border-radius:999px;transition:width .4s ease}
+.br-val{text-align:right;font-size:10.5px;font-weight:900;color:var(--muted)}
+
+.acts{display:flex;flex-direction:column;gap:6px}
+.act-item{display:flex;align-items:flex-start;gap:7px;font-size:11.5px;font-weight:700;line-height:1.45;color:var(--text)}
+.act-num{
+  width:auto;height:auto;min-width:38px;padding:2px 7px;border-radius:999px;
+  background:#e8f4fd;border:1px solid #c9e4f8;color:var(--blue);
+  font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:0;
+}
+
+/* RESULT */
+.yield-section{margin-bottom:10px}
+.yield-header{font-size:10px;font-weight:900;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.yield-header::after{content:'';flex:1;height:1px;background:var(--border)}
+.yield-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.yc{background:#f7fbff;border:1px solid var(--border);border-radius:8px;padding:6px 5px;text-align:center}
+.yc-n{font-size:9.5px;color:var(--muted);font-weight:700}
+.yc-v{font-size:13px;font-weight:900;margin-top:2px}
+.yc-note{font-size:8.5px;color:var(--muted);margin-top:1px}
+
+.res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px}
+.res-card{border-radius:12px;padding:10px 8px;text-align:center;border:1.5px solid var(--border)}
+.res-card.a{background:#e8f4fd;border-color:#bfdbf5}
+.res-card.b{background:#e0f7f5;border-color:#a8e6e0}
+.res-card.c{background:#fff0e6;border-color:#ffd0b0}
+.res-lbl{font-size:10px;color:var(--muted);font-weight:800;line-height:1.4}
+.res-val{font-size:20px;font-weight:900;margin-top:4px;line-height:1}
+.res-card.a .res-val{color:var(--blue)}
+.res-card.b .res-val{color:var(--teal)}
+.res-card.c .res-val{color:var(--orange)}
+.res-val .u{font-size:10px;font-weight:700;color:var(--muted);margin-left:1px}
+.res-rate-row{text-align:center;font-size:10px;color:var(--muted);margin-bottom:9px}
+.res-rate-row strong{color:var(--blue)}
+
+.chart-wrap{border:1px solid #e5f0fb;border-radius:11px;background:#fafcff;padding:5px;overflow:hidden}
+#growthCanvas{width:100%;height:120px;display:block}
+
+details{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 13px}
+summary{cursor:pointer;font-size:12px;font-weight:900;color:var(--blue)}
+.det-body{margin-top:8px;font-size:10.5px;color:var(--muted);line-height:1.9}
+.det-body strong{color:var(--text)}
+.footnote{font-size:10px;color:var(--muted);text-align:center;line-height:1.6;margin-top:2px}
+
+/* CALCULATOR */
+.calc-mask{
+  position:fixed;inset:0;background:rgba(30,45,61,.18);
+  z-index:99;display:none;
+}
+.calc-mask.show{display:block}
+.calc-panel{
+  position:fixed;left:0;right:0;bottom:0;z-index:100;
+  background:#f7f8fb;border-radius:22px 22px 0 0;
+  box-shadow:0 -8px 30px rgba(30,45,61,.18);
+  padding:12px 14px 18px;
+  transform:translateY(105%);
+  transition:transform .22s ease;
+}
+.calc-panel.show{transform:translateY(0)}
+.calc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.calc-title{font-size:13px;font-weight:900;color:var(--text)}
+.calc-close{
+  border:0;background:#edf2f7;color:var(--text);
+  width:30px;height:30px;border-radius:50%;
+  font-size:18px;font-weight:900;line-height:1;cursor:pointer;
+}
+.calc-screen{
+  background:#fff;border-radius:16px;border:1px solid #e5eaf0;
+  padding:10px 12px;margin-bottom:10px;
+}
+.calc-expr{
+  min-height:22px;font-size:18px;font-weight:800;color:var(--text);
+  word-break:break-all;text-align:right;
+}
+.calc-result{
+  margin-top:4px;font-size:12px;color:var(--muted);text-align:right;
+}
+.calc-result strong{font-size:18px;color:var(--blue)}
+.calc-keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-key{
+  border:0;border-radius:14px;background:#fff;color:#3d4656;
+  height:54px;font-size:25px;font-weight:600;
+  box-shadow:0 1px 0 rgba(0,0,0,.04);font-family:inherit;cursor:pointer;
+}
+.calc-key.op{font-size:24px}
+.calc-key.util{font-size:16px;font-weight:900}
+.calc-key.fill{
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;font-size:16px;font-weight:900;
+}
+.calc-key.done{
+  background:#f26457;color:#fff;font-size:17px;font-weight:900;
+}
+.calc-key:active{transform:scale(.98)}
+.calc-tip{
+  margin-top:8px;text-align:center;font-size:10px;color:var(--muted);
+}
+
+@media(max-width:500px){
+  .donuts-row{grid-template-columns:1fr 1fr}
+  .alloc-lr{grid-template-columns:1fr 1fr}
+  .res-grid{grid-template-columns:repeat(3,1fr)}
+  .hero-sums{gap:12px}
+}
+@media(max-width:400px){
+  .alloc-lr{grid-template-columns:1fr}
+  .donuts-row{grid-template-columns:1fr}
+  .yield-row{grid-template-columns:repeat(2,1fr)}
+  .res-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>资产配置体检 · 3 年增长测算</h1>
+  <div class="hero-row">
+    <div class="hero-sums">
+      <div class="hs">
+        <div class="hs-l">广义总资产</div>
+        <div class="hs-v" id="totalAssets">—<span class="u">万</span></div>
+      </div>
+      <div class="hs teal">
+        <div class="hs-l">可配置金融资产</div>
+        <div class="hs-v" id="investable">—<span class="u">万</span></div>
+      </div>
+    </div>
+    <div class="hero-badge">🔒 本地计算，数据不上传</div>
+  </div>
+</header>
+
+<div class="card">
+  <div class="card-hd">
+    <div class="cnum">1</div>
+    <div class="ctitle">资产输入</div>
+    <div class="csub">单位：万元</div>
+  </div>
+
+  <div class="a-list">
+    <div class="a-row">
+      <div class="a-lbl"><span class="a-dot" style="background:#3b9de8"></span><div><div class="a-name">现金类</div><div class="a-tip">活期/货基/短期现金</div></div></div>
+      <input class="inp ai calc-input" id="cash" type="text" inputmode="none" readonly placeholder="0.0" data-label="现金类">
+      <div class="a-pct" id="cashP">—</div>
+    </div>
+    <div class="a-row">
+      <div class="a-lbl"><span class="a-dot" style="background:#00b8a9"></span><div><div class="a-name">稳健类</div><div class="a-tip">存款/理财/债基</div></div></div>
+      <input class="inp ai calc-input" id="stable" type="text" inputmode="none" readonly placeholder="0.0" data-label="稳健类">
+      <div class="a-pct" id="stableP">—</div>
+    </div>
+    <div class="a-row">
+      <div class="a-lbl"><span class="a-dot" style="background:#f4833d"></span><div><div class="a-name">增长类</div><div class="a-tip">股票/指数基金/ETF</div></div></div>
+      <input class="inp ai calc-input" id="growth" type="text" inputmode="none" readonly placeholder="0.0" data-label="增长类">
+      <div class="a-pct" id="growthP">—</div>
+    </div>
+    <div class="a-row">
+      <div class="a-lbl"><span class="a-dot" style="background:#e8a800"></span><div><div class="a-name">避险类</div><div class="a-tip">黄金ETF/积存金</div></div></div>
+      <input class="inp ai calc-input" id="hedge" type="text" inputmode="none" readonly placeholder="0.0" data-label="避险类">
+      <div class="a-pct" id="hedgeP">—</div>
+    </div>
+    <div class="a-row">
+      <div class="a-lbl"><span class="a-dot" style="background:#8c9eb0"></span><div><div class="a-name">不可配置类</div><div class="a-tip">公积金/养老金/其它资产</div></div></div>
+      <input class="inp ai calc-input" id="other" type="text" inputmode="none" readonly placeholder="0.0" data-label="不可配置类">
+      <div class="a-pct" id="otherP">—</div>
+    </div>
+  </div>
+
+  <div class="monthly-row">
+    <label for="monthly">每月可投入金额（万）</label>
+    <input class="inp calc-input" id="monthly" type="text" inputmode="none" readonly placeholder="例：2.0" style="width:90px" data-label="每月可投入金额">
+    <span class="hint">税后可持续投入的储蓄金额</span>
+  </div>
+</div>
+
+<div class="divider">📄 以下为自动生成的资产分析与配置建议</div>
+
+<div class="card">
+  <div class="card-hd">
+    <div class="cnum">2</div>
+    <div class="ctitle">资产现状分析</div>
+    <div class="csub" id="stageTag">请先填写资产</div>
+  </div>
+
+  <div class="donuts-row">
+    <div class="donut-box">
+      <div class="donut-label">广义总资产分布</div>
+      <div class="donut-wrap" style="width:110px;height:110px">
+        <canvas id="donutAll" width="110" height="110"></canvas>
+        <div class="donut-c">
+          <div class="dc-n" id="donutAllNum">—</div>
+          <div class="dc-l">万 合计</div>
+        </div>
+      </div>
+    </div>
+    <div class="donut-box">
+      <div class="donut-label">可配置资产分布</div>
+      <div class="donut-wrap" style="width:110px;height:110px">
+        <canvas id="donutInv" width="110" height="110"></canvas>
+        <div class="donut-c">
+          <div class="dc-n" id="donutInvNum">—</div>
+          <div class="dc-l">万 可配置</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diag-box">
+    <div class="diag-stage" id="diagStage">当前阶段：—</div>
+    <div class="diag-text" id="diagText">填写资产后，将自动生成现状分析。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <div class="cnum">3</div>
+    <div class="ctitle">配置建议</div>
+    <div class="csub">保守 / 中性 / 乐观</div>
+  </div>
+
+  <div class="sc-tabs">
+    <button class="sc-btn" data-sc="conservative" onclick="setSc('conservative')">
+      <span class="sc-l">保守</span>
+      <span class="sc-r" id="scR0">—%</span>
+      <span class="sc-h">目标组合年化</span>
+    </button>
+    <button class="sc-btn active" data-sc="neutral" onclick="setSc('neutral')">
+      <span class="sc-l">中性</span>
+      <span class="sc-r" id="scR1">—%</span>
+      <span class="sc-h">目标组合年化</span>
+    </button>
+    <button class="sc-btn" data-sc="optimistic" onclick="setSc('optimistic')">
+      <span class="sc-l">乐观</span>
+      <span class="sc-r" id="scR2">—%</span>
+      <span class="sc-h">目标组合年化</span>
+    </button>
+  </div>
+
+  <div class="strategy-note">
+    <div class="sn-title" id="strategyTitle">当前策略：中性</div>
+    <div class="sn-text" id="strategyText">在稳定性和增长性之间做平衡，适合作为默认配置参考。</div>
+  </div>
+
+  <div class="alloc-lr">
+    <div class="alloc-panel cur">
+      <div class="ap-title">当前持仓占比<span class="ap-tag">可配置资产内</span></div>
+      <div class="bar-list" id="curBars"></div>
+    </div>
+    <div class="alloc-panel tgt">
+      <div class="ap-title">建议目标占比<span class="ap-tag teal" id="targetTag">中性目标</span></div>
+      <div class="bar-list" id="tarBars"></div>
+    </div>
+  </div>
+
+  <div class="acts" id="actsList">
+    <div class="act-item"><span class="act-num">建议1</span><span>填写资产数据后，将自动生成调整建议。</span></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <div class="cnum">4</div>
+    <div class="ctitle">3 年增长测算</div>
+    <div class="csub">按目标配置 + 每月持续投入</div>
+  </div>
+
+  <div class="yield-section">
+    <div class="yield-header">当前策略各类资产收益率假设（预估年化，仅供测算参考）</div>
+    <div class="yield-row">
+      <div class="yc"><div class="yc-n">现金类</div><div class="yc-v" id="ycC" style="color:#3b9de8">—%</div><div class="yc-note">预估年化</div></div>
+      <div class="yc"><div class="yc-n">稳健类</div><div class="yc-v" id="ycS" style="color:#00b8a9">—%</div><div class="yc-note">预估年化</div></div>
+      <div class="yc"><div class="yc-n">增长类</div><div class="yc-v" id="ycG" style="color:#f4833d">—%</div><div class="yc-note">预估年化</div></div>
+      <div class="yc"><div class="yc-n">避险类</div><div class="yc-v" id="ycH" style="color:#e8a800">—%</div><div class="yc-note">预估年化</div></div>
+    </div>
+  </div>
+
+  <div class="res-rate-row">按当前目标配置，组合预估年化收益率：<strong id="tarRateShow">—%</strong></div>
+
+  <div class="res-grid">
+    <div class="res-card a">
+      <div class="res-lbl">3年后<br>预估总资产</div>
+      <div class="res-val" id="r3total">—<span class="u">万</span></div>
+    </div>
+    <div class="res-card b">
+      <div class="res-lbl">3年后<br>可配置资产</div>
+      <div class="res-val" id="r3inv">—<span class="u">万</span></div>
+    </div>
+    <div class="res-card c">
+      <div class="res-lbl">3年<br>投资收益</div>
+      <div class="res-val" id="r3profit">—<span class="u">万</span></div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="growthCanvas" width="660" height="120"></canvas>
+  </div>
+</div>
+
+<details>
+  <summary>查看填写口径与测算假设 ▾</summary>
+  <div class="det-body">
+    <strong>现金类：</strong>活期、余额宝、货币基金、短期现金管理。<br>
+    <strong>稳健类：</strong>存款、存单、国债、低风险银行理财、债基、储蓄险。<br>
+    <strong>增长类：</strong>股票、指数基金、ETF、美股、QDII、行业基金。<br>
+    <strong>避险类：</strong>黄金ETF、黄金基金、积存金、实物黄金折算市值。<br>
+    <strong>不可配置类：</strong>公积金、国家养老金、其它资产，按年化3%粗略估算增长。<br><br>
+    <strong>资产阶段：</strong>&lt;50万安全垫优先型｜50–200万均衡增长型｜&gt;200万长期增长型。<br>
+    <strong>策略说明：</strong>保守、中性、乐观对应不同目标配置，不只是改变收益率假设。<br>
+    <strong>配置占比：</strong>当前持仓与建议目标中的百分比，均指该类资产在可配置金融资产中的资金占比。<br>
+    <strong>3年测算逻辑：</strong>假设按当前选择的目标配置持仓，叠加每月新增投入，按所选策略收益率复利计算。不可配置类按年化3%独立计算。<br>
+    <strong>收益率假设：</strong>仅用于情景测算，不代表任何收益承诺。<br>
+    <strong>测算公式：</strong>月收益率=(1+年化率)^(1/12)−1，每月先计息再加入新增储蓄。<br>
+    <strong>风险提示：</strong>本页不构成投资建议，实际收益受市场波动等因素影响。
+  </div>
+</details>
+<div class="footnote">🔒 所有计算在本地完成，数据不上传</div>
+</div>
+
+<div class="calc-mask" id="calcMask" onclick="closeCalc()"></div>
+<div class="calc-panel" id="calcPanel">
+  <div class="calc-head">
+    <div class="calc-title" id="calcTitle">填写金额</div>
+    <button class="calc-close" onclick="closeCalc()">×</button>
+  </div>
+  <div class="calc-screen">
+    <div class="calc-expr" id="calcExpr">0</div>
+    <div class="calc-result">计算结果：<strong id="calcResult">0.0</strong> 万</div>
+  </div>
+  <div class="calc-keys">
+    <button class="calc-key" onclick="tapCalc('1')">1</button>
+    <button class="calc-key" onclick="tapCalc('2')">2</button>
+    <button class="calc-key" onclick="tapCalc('3')">3</button>
+    <button class="calc-key op" onclick="tapCalc('+')">＋</button>
+
+    <button class="calc-key" onclick="tapCalc('4')">4</button>
+    <button class="calc-key" onclick="tapCalc('5')">5</button>
+    <button class="calc-key" onclick="tapCalc('6')">6</button>
+    <button class="calc-key op" onclick="tapCalc('-')">－</button>
+
+    <button class="calc-key" onclick="tapCalc('7')">7</button>
+    <button class="calc-key" onclick="tapCalc('8')">8</button>
+    <button class="calc-key" onclick="tapCalc('9')">9</button>
+    <button class="calc-key util" onclick="backspaceCalc()">退格</button>
+
+    <button class="calc-key" onclick="tapCalc('.')">.</button>
+    <button class="calc-key" onclick="tapCalc('0')">0</button>
+    <button class="calc-key fill" onclick="fillCurrentInput()">填入</button>
+    <button class="calc-key done" onclick="doneCalc()">完成</button>
+  </div>
+  <div class="calc-tip">支持加减：例如 3.2 + 1.8 + 2.5，结果会填入当前资产项</div>
+</div>
+
+<script>
+const RATES={
+  conservative:{cash:.015,stable:.030,growth:.050,hedge:.020},
+  neutral:     {cash:.020,stable:.035,growth:.080,hedge:.040},
+  optimistic:  {cash:.023,stable:.040,growth:.110,hedge:.070}
+};
+
+const STRATEGY_TEXT={
+  conservative:'更重视安全垫与低波动，现金类和稳健类占比更高，适合不希望资产大幅波动的人。',
+  neutral:'在稳定性和增长性之间做平衡，适合作为默认配置参考。',
+  optimistic:'提高增长类资产占比，追求更高长期弹性，但组合波动也会更大。'
+};
+
+const SC_LABELS={conservative:'保守',neutral:'中性',optimistic:'乐观'};
+const COLORS={cash:'#3b9de8',stable:'#00b8a9',growth:'#f4833d',hedge:'#e8a800',other:'#8c9eb0'};
+const INV_ORDER=['cash','stable','growth','hedge'];
+const ALL_ORDER=['cash','stable','growth','hedge','other'];
+const LABELS={cash:'现金',stable:'稳健',growth:'增长',hedge:'避险',other:'其它'};
+let activeSc='neutral';
+
+let activeInput=null;
+let calcExpr='';
+
+const $=id=>document.getElementById(id);
+const num=v=>{const n=parseFloat(v);return(isFinite(n)&&n>=0)?n:0};
+const pct=v=>(v*100).toFixed(1)+'%';
+const fw=v=>v>0?`${v.toFixed(1)}<span class="u">万</span>`:`—<span class="u">万</span>`;
+
+function getVals(){
+  return{
+    cash:num($('cash').value),stable:num($('stable').value),
+    growth:num($('growth').value),hedge:num($('hedge').value),
+    other:num($('other').value),monthly:num($('monthly').value)
+  };
+}
+
+function safeFormat(n){
+  if(!isFinite(n)||n<0)n=0;
+  return Number.isInteger(n)?String(n):String(Math.round(n*100)/100);
+}
+
+function openCalc(input){
+  activeInput=input;
+  document.querySelectorAll('.calc-input').forEach(i=>i.classList.remove('active-input'));
+  activeInput.classList.add('active-input');
+  calcExpr=activeInput.value || '';
+  $('calcTitle').textContent='填写：'+(activeInput.dataset.label||'金额');
+  updateCalcScreen();
+  $('calcMask').classList.add('show');
+  $('calcPanel').classList.add('show');
+  document.body.classList.add('calc-open');
+}
+
+function closeCalc(){
+  $('calcMask').classList.remove('show');
+  $('calcPanel').classList.remove('show');
+  document.body.classList.remove('calc-open');
+  document.querySelectorAll('.calc-input').forEach(i=>i.classList.remove('active-input'));
+}
+
+function cleanExpression(expr){
+  return expr
+    .replace(/×/g,'*')
+    .replace(/÷/g,'/')
+    .replace(/＋/g,'+')
+    .replace(/－/g,'-')
+    .replace(/[^\d+\-*/.]/g,'');
+}
+
+function evaluateCalc(){
+  const expr=cleanExpression(calcExpr);
+  if(!expr)return 0;
+  if(/[+\-*/.]$/.test(expr)) {
+    try{
+      const trimmed=expr.replace(/[+\-*/.]+$/,'');
+      if(!trimmed)return 0;
+      return Function('"use strict";return ('+trimmed+')')();
+    }catch(e){return 0;}
+  }
+  try{
+    const result=Function('"use strict";return ('+expr+')')();
+    return isFinite(result)&&result>=0?result:0;
+  }catch(e){
+    return 0;
+  }
+}
+
+function updateCalcScreen(){
+  $('calcExpr').textContent=calcExpr || '0';
+  $('calcResult').textContent=safeFormat(evaluateCalc());
+}
+
+function tapCalc(ch){
+  const ops=['+','-','*','/'];
+  const last=calcExpr.slice(-1);
+  const mapped=ch==='×'?'*':ch==='÷'?'/':ch;
+
+  if(mapped==='.') {
+    const parts=calcExpr.split(/[+\-*/]/);
+    const lastNum=parts[parts.length-1] || '';
+    if(lastNum.includes('.')) return;
+    if(calcExpr==='' || ops.includes(last)) calcExpr+='0';
+    calcExpr+='.';
+    updateCalcScreen();
+    return;
+  }
+
+  if(ops.includes(mapped)){
+    if(calcExpr==='') return;
+    if(ops.includes(last)||last==='.') calcExpr=calcExpr.slice(0,-1);
+    calcExpr+=mapped;
+    updateCalcScreen();
+    return;
+  }
+
+  if(/\d/.test(mapped)){
+    calcExpr+=mapped;
+    updateCalcScreen();
+  }
+}
+
+function backspaceCalc(){
+  calcExpr=calcExpr.slice(0,-1);
+  updateCalcScreen();
+}
+
+function fillCurrentInput(){
+  if(!activeInput)return;
+  const result=evaluateCalc();
+  activeInput.value=safeFormat(result);
+  calculate();
+}
+
+function doneCalc(){
+  fillCurrentInput();
+  closeCalc();
+}
+
+document.querySelectorAll('.calc-input').forEach(input=>{
+  input.addEventListener('click',()=>openCalc(input));
+});
+
+function getBaseTarget(inv){
+  if(inv<=0)return{label:'暂无数据',reason:'填写资产后将自动匹配配置建议。',cash:0,stable:0,growth:0,hedge:0};
+  if(inv<50)return{
+    label:'安全垫优先型',
+    reason:'可配置资产低于50万，建议优先保证现金安全垫，以低波动资产为主，少量配置增长类资产。',
+    cash:.25,stable:.45,growth:.25,hedge:.05
+  };
+  if(inv<200)return{
+    label:'均衡增长型',
+    reason:'可配置资产50–200万，建议在稳定性和长期增长间做均衡，适度提升增长类和避险类比例。',
+    cash:.15,stable:.40,growth:.38,hedge:.07
+  };
+  return{
+    label:'长期增长型',
+    reason:'可配置资产超过200万，安全垫已较为充足，建议适度提高增长类资产占比，追求长期复利。',
+    cash:.10,stable:.35,growth:.48,hedge:.07
+  };
+}
+
+function getTarget(inv,sc){
+  const base=getBaseTarget(inv);
+  if(inv<=0)return base;
+
+  let t={...base};
+
+  if(sc==='conservative'){
+    if(base.label==='安全垫优先型'){
+      t.cash=.30;t.stable=.50;t.growth=.15;t.hedge=.05;
+    }else if(base.label==='均衡增长型'){
+      t.cash=.20;t.stable=.45;t.growth=.28;t.hedge=.07;
+    }else{
+      t.cash=.15;t.stable=.42;t.growth=.35;t.hedge=.08;
+    }
+  }
+
+  if(sc==='neutral'){
+    t={...base};
+  }
+
+  if(sc==='optimistic'){
+    if(base.label==='安全垫优先型'){
+      t.cash=.18;t.stable=.37;t.growth=.38;t.hedge=.07;
+    }else if(base.label==='均衡增长型'){
+      t.cash=.10;t.stable=.30;t.growth=.52;t.hedge=.08;
+    }else{
+      t.cash=.07;t.stable=.25;t.growth=.60;t.hedge=.08;
+    }
+  }
+
+  return t;
+}
+
+function wRate(shares,sc){
+  const r=RATES[sc];
+  return shares.cash*r.cash+shares.stable*r.stable+shares.growth*r.growth+shares.hedge*r.hedge;
+}
+
+function getDiag(v,inv,total,base){
+  if(total<=0)return'填写资产后，将自动生成现状分析。';
+
+  const invShare=total>0?inv/total:0;
+  const cashShare=inv>0?v.cash/inv:0;
+  const growthShare=inv>0?v.growth/inv:0;
+  const otherShare=total>0?v.other/total:0;
+
+  if(inv<=0&&v.other>0)return'当前资产主要集中在不可配置类，短期可调仓空间较小。建议先建立可配置金融资产账户，再逐步形成现金、稳健、增长、避险的结构。';
+  if(cashShare>.45)return`${base.reason} 当前可配置资产中现金类占比偏高，安全性较强，但长期收益弹性不足。`;
+  if(growthShare<.20&&inv>=50)return`${base.reason} 当前增长类资产占比较低，长期增值能力偏弱，后续可以用新增资金逐步补足。`;
+  if(growthShare>.65)return`${base.reason} 当前增长类资产占比较高，组合波动可能较大，需要确认风险承受能力。`;
+  if(otherShare>.55)return`${base.reason} 广义资产中不可配置类占比较高，真正能调仓的金融资产比例有限。`;
+  if(invShare<.45)return`${base.reason} 可配置金融资产占广义资产比例偏低，后续提升空间主要来自每月新增投入和金融资产积累。`;
+  return`${base.reason} 当前资产结构相对均衡，后续重点是根据目标策略持续优化现金、稳健、增长和避险的比例。`;
+}
+
+function getActions(v,target,inv){
+  if(inv<=0)return['填写资产数据后，将自动生成调整建议。'];
+  const gaps=INV_ORDER
+    .map(k=>({k,name:LABELS[k]+'类',cur:v[k],tgt:inv*target[k],gap:inv*target[k]-v[k]}))
+    .filter(it=>Math.abs(it.gap)>=1&&Math.abs(it.gap)/inv>=.02)
+    .sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap)).slice(0,3);
+  if(!gaps.length)return['持仓已接近目标，后续用新增资金按目标比例投入即可。'];
+  const list=gaps.map(it=>`${it.name} ${it.gap>0?'↑ 增至':'↓ 降至'}约 ${(it.cur+it.gap).toFixed(1)} 万（差 ${Math.abs(it.gap).toFixed(1)} 万）`);
+  list.push('建议 6–12 个月分批完成，优先用每月新增资金补足，不一次性大额调仓。');
+  return list.slice(0,4);
+}
+
+function renderBars(id,shares){
+  const el=$(id);el.innerHTML='';
+  INV_ORDER.forEach(k=>{
+    const val=shares[k]||0;
+    const d=document.createElement('div');d.className='br';
+    d.innerHTML=`<div class="br-name">${LABELS[k]}</div>
+      <div class="br-track"><div class="br-fill" style="width:${val*100}%;background:${COLORS[k]}"></div></div>
+      <div class="br-val">${val>0?pct(val):'—'}</div>`;
+    el.appendChild(d);
+  });
+}
+
+function drawDonut(canvasId,vals,total,order){
+  const c=$(canvasId),ctx=c.getContext('2d');
+  const W=110,cx=55,cy=55,r=43,lw=13;
+  ctx.clearRect(0,0,W,W);
+  if(total<=0){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#ddeaf7';ctx.lineWidth=lw;ctx.stroke();return}
+  let s=-Math.PI/2;
+  order.forEach(k=>{
+    const val=vals[k]||0;if(val<=0)return;
+    const sw=(val/total)*Math.PI*2;
+    ctx.beginPath();ctx.arc(cx,cy,r,s,s+sw);
+    ctx.strokeStyle=COLORS[k];ctx.lineWidth=lw;ctx.lineCap='butt';ctx.stroke();
+    s+=sw;
+  });
+}
+
+function simulate(inv,other,monthly,rate){
+  const mR=rate>0?Math.pow(1+rate,1/12)-1:0;
+  const oR=Math.pow(1.03,1/12)-1;
+  let iN=inv,oN=other;
+  const pts=[{month:0,total:iN+oN,inv:iN}];
+  for(let m=1;m<=36;m++){
+    iN=iN*(1+mR)+monthly;
+    oN=oN*(1+oR);
+    if(m%12===0)pts.push({month:m,total:iN+oN,inv:iN});
+  }
+  return{pts,finalTotal:iN+oN,finalInv:iN,profit:iN-inv-monthly*36};
+}
+
+function drawChart(pts){
+  const c=$('growthCanvas'),ctx=c.getContext('2d');
+  const W=c.offsetWidth||660,H=120;
+  c.width=W;c.height=H;ctx.clearRect(0,0,W,H);
+  if(!pts||pts.length<2)return;
+  const pad={t:22,r:16,b:22,l:40};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const vals=pts.map(p=>p.total);
+  const maxV=Math.max(...vals)*1.1,minV=Math.min(...vals)*.9;
+  const xS=i=>pad.l+(i/(pts.length-1))*cw;
+  const yS=v=>pad.t+ch-((v-minV)/(maxV-minV||1))*ch;
+
+  ctx.strokeStyle='#e6eef6';ctx.lineWidth=1;
+  [0,1,2].forEach(i=>{
+    const yy=pad.t+(i/2)*ch;
+    ctx.beginPath();ctx.moveTo(pad.l,yy);ctx.lineTo(pad.l+cw,yy);ctx.stroke();
+    ctx.fillStyle='#9db0bf';ctx.font='9px sans-serif';ctx.textAlign='right';
+    ctx.fillText((maxV-(i/2)*(maxV-minV)).toFixed(0),pad.l-4,yy+3);
+  });
+
+  ctx.beginPath();
+  ctx.moveTo(xS(0),yS(pts[0].total));
+  pts.forEach((p,i)=>ctx.lineTo(xS(i),yS(p.total)));
+  ctx.lineTo(xS(pts.length-1),pad.t+ch);ctx.lineTo(xS(0),pad.t+ch);ctx.closePath();
+  const g=ctx.createLinearGradient(0,pad.t,0,pad.t+ch);
+  g.addColorStop(0,'rgba(26,111,196,.18)');g.addColorStop(1,'rgba(26,111,196,.01)');
+  ctx.fillStyle=g;ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(xS(0),yS(pts[0].total));
+  pts.forEach((p,i)=>ctx.lineTo(xS(i),yS(p.total)));
+  ctx.strokeStyle='#1a6fc4';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();
+
+  pts.forEach((p,i)=>{
+    const xx=xS(i),yy=yS(p.total);
+    ctx.beginPath();ctx.arc(xx,yy,3.5,0,Math.PI*2);ctx.fillStyle='#1a6fc4';ctx.fill();
+    ctx.fillStyle='#1a6fc4';ctx.font='bold 9.5px sans-serif';ctx.textAlign='center';
+    ctx.fillText(p.total.toFixed(0)+'万',xx,yy-9);
+    ctx.fillStyle='#9db0bf';ctx.font='9px sans-serif';
+    ctx.fillText(p.month===0?'当前':`${p.month}月后`,xx,H-5);
+  });
+}
+
+function calculate(){
+  const v=getVals();
+  const inv=v.cash+v.stable+v.growth+v.hedge;
+  const total=inv+v.other;
+  const base=getBaseTarget(inv);
+  const target=getTarget(inv,activeSc);
+
+  $('totalAssets').innerHTML=total>0?`${total.toFixed(1)}<span class="u">万</span>`:`—<span class="u">万</span>`;
+  $('investable').innerHTML=inv>0?`${inv.toFixed(1)}<span class="u">万</span>`:`—<span class="u">万</span>`;
+
+  ALL_ORDER.forEach(k=>{ $(`${k}P`).textContent=total>0?pct(v[k]/total):'—'; });
+
+  drawDonut('donutAll',v,total,ALL_ORDER);
+  $('donutAllNum').textContent=total>0?total.toFixed(1):'—';
+  drawDonut('donutInv',v,inv,INV_ORDER);
+  $('donutInvNum').textContent=inv>0?inv.toFixed(1):'—';
+
+  $('stageTag').textContent=inv>0?base.label:'请先填写资产';
+  $('diagStage').textContent=inv>0?`当前阶段：${base.label}`:'当前阶段：—';
+  $('diagText').textContent=getDiag(v,inv,total,base);
+
+  const curShares={cash:inv>0?v.cash/inv:0,stable:inv>0?v.stable/inv:0,growth:inv>0?v.growth/inv:0,hedge:inv>0?v.hedge/inv:0};
+
+  const scKeys=['conservative','neutral','optimistic'];
+  scKeys.forEach((sc,i)=>{
+    const t=getTarget(inv,sc);
+    $(`scR${i}`).textContent=inv>0?pct(wRate(t,sc)):'—%';
+  });
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.toggle('active',b.dataset.sc===activeSc));
+
+  $('strategyTitle').textContent=`当前策略：${SC_LABELS[activeSc]}`;
+  $('strategyText').textContent=STRATEGY_TEXT[activeSc];
+  $('targetTag').textContent=`${SC_LABELS[activeSc]}目标`;
+
+  renderBars('curBars',curShares);
+  renderBars('tarBars',target);
+
+  const wrap=$('actsList');wrap.innerHTML='';
+  getActions(v,target,inv).forEach((txt,i)=>{
+    const d=document.createElement('div');d.className='act-item';
+    d.innerHTML=`<span class="act-num">建议${i+1}</span><span>${txt}</span>`;
+    wrap.appendChild(d);
+  });
+
+  const ar=RATES[activeSc];
+  $('ycC').textContent=pct(ar.cash);$('ycS').textContent=pct(ar.stable);
+  $('ycG').textContent=pct(ar.growth);$('ycH').textContent=pct(ar.hedge);
+
+  const tarRate=inv>0?wRate(target,activeSc):0;
+  $('tarRateShow').textContent=inv>0?pct(tarRate):'—%';
+
+  const sim=simulate(inv,v.other,v.monthly,tarRate);
+  $('r3total').innerHTML=fw(sim.finalTotal);
+  $('r3inv').innerHTML=fw(sim.finalInv);
+  $('r3profit').innerHTML=sim.profit>0?`${sim.profit.toFixed(1)}<span class="u">万</span>`:`—<span class="u">万</span>`;
+
+  drawChart(sim.pts);
+}
+
+function setSc(sc){activeSc=sc;calculate();}
+
+window.addEventListener('resize',calculate);
+calculate();
+</script>
+</body>
+</html>
